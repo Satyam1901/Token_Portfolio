@@ -136,11 +136,7 @@ src/
 
 ## Deployment
 
-The application can be deployed to any static hosting service:
-
 - **Vercel**: `vercel --prod`
-- **Netlify**: Connect your GitHub repository
-- **GitHub Pages**: Use the build output from `dist/` folder
 
 ## Environment Variables
 
@@ -151,19 +147,3 @@ VITE_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
 Get your WalletConnect Project ID from [cloud.walletconnect.com](https://cloud.walletconnect.com/)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support or questions, please open an issue in the GitHub repository.
