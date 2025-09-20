@@ -84,7 +84,7 @@ export const generateChartColors = (count: number): string[] => {
   return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
 };
 
-export const debounce = <T extends (...args: unknown[]) => void>(
+export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   delay: number
 ): ((...args: Parameters<T>) => void) => {

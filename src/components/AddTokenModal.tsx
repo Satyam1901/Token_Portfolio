@@ -25,26 +25,31 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
 
   const existingTokenIds = new Set(watchlist.map(token => token.id));
 
+  // Search function
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const results = await coinGeckoService.searchTokens(query);
+      setSearchResults(results);
+    } catch (err) {
+      setError('Failed to search tokens');
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Debounced search function
   const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const results = await coinGeckoService.searchTokens(query);
-        setSearchResults(results);
-      } catch (err) {
-        setError('Failed to search tokens');
-        setSearchResults([]);
-      } finally {
-        setIsLoading(false);
-      }
+    debounce((query: string) => {
+      performSearch(query);
     }, 300),
     []
   );
