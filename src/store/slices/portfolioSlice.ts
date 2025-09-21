@@ -12,7 +12,7 @@ interface PortfolioState {
   lastUpdated: string | null;
   isLoading: boolean;
   error: string | null;
-  // Pagination state
+
   currentPage: number;
   itemsPerPage: number;
   totalItems: number;
@@ -27,7 +27,7 @@ const initialState: PortfolioState = {
   lastUpdated: null,
   isLoading: false,
   error: null,
-  // Pagination state
+
   currentPage: 1,
   itemsPerPage: 10,
   totalItems: 0,
@@ -35,20 +35,20 @@ const initialState: PortfolioState = {
   paginatedWatchlist: [],
 };
 
-// Load portfolio from localStorage
+
 const loadPortfolioFromStorage = (): WatchlistToken[] => {
   try {
     const saved = localStorage.getItem('token-portfolio-watchlist');
     if (saved) {
       const parsedData = JSON.parse(saved);
-      // If we have old data with fewer tokens, use the new sample data
+
       if (parsedData.length < 15) {
         console.log('Old data detected, using new sample data with', sampleTokens.length, 'tokens');
         return sampleTokens;
       }
       return parsedData;
     }
-    // If no saved data, use sample tokens
+
     console.log('No saved data, using sample data with', sampleTokens.length, 'tokens');
     return sampleTokens;
   } catch (error) {
@@ -57,7 +57,7 @@ const loadPortfolioFromStorage = (): WatchlistToken[] => {
   }
 };
 
-// Save portfolio to localStorage
+
 const savePortfolioToStorage = (watchlist: WatchlistToken[]) => {
   try {
     localStorage.setItem('token-portfolio-watchlist', JSON.stringify(watchlist));
@@ -66,7 +66,7 @@ const savePortfolioToStorage = (watchlist: WatchlistToken[]) => {
   }
 };
 
-// Calculate portfolio metrics
+
 const calculatePortfolioMetrics = (watchlist: WatchlistToken[]) => {
   const totalValue = watchlist.reduce((sum, token) => sum + token.value, 0);
   const previousTotalValue = watchlist.reduce((sum, token) => {
@@ -78,7 +78,7 @@ const calculatePortfolioMetrics = (watchlist: WatchlistToken[]) => {
   return { totalValue, dailyChange };
 };
 
-//refresh token prices
+
 export const refreshTokenPrices = createAsyncThunk(
   'portfolio/refreshTokenPrices',
   async (_, { getState }) => {
@@ -110,7 +110,7 @@ export const refreshTokenPrices = createAsyncThunk(
   }
 );
 
-// Load paginated watchlist data
+
 export const loadPaginatedWatchlist = createAsyncThunk(
   'portfolio/loadPaginatedWatchlist',
   async ({ page, itemsPerPage }: { page: number; itemsPerPage: number }, { getState }) => {
@@ -130,7 +130,7 @@ export const loadPaginatedWatchlist = createAsyncThunk(
     const tokenIds = watchlist.map(token => token.id);
     const result = await coinGeckoService.getTokenPricesPaginated(tokenIds, page, itemsPerPage);
 
-    // Map the paginated tokens back to watchlist tokens with holdings
+
     const paginatedWatchlist = result.tokens.map(token => {
       const watchlistToken = watchlist.find(wt => wt.id === token.id);
       return {
@@ -179,7 +179,7 @@ const portfolioSlice = createSlice({
     dailyChange,
     lastUpdated: new Date().toISOString(),
     totalItems: initialWatchlist.length,
-    paginatedWatchlist: initialWatchlist.slice(0, 10), // Initial pagination
+    paginatedWatchlist: initialWatchlist.slice(0, 10),
   },
   reducers: {
     updateTokenHoldings: (state, action: PayloadAction<{ tokenId: string; holdings: number }>) => {
@@ -190,7 +190,7 @@ const portfolioSlice = createSlice({
         state.watchlist[tokenIndex].holdings = holdings;
         state.watchlist[tokenIndex].value = holdings * state.watchlist[tokenIndex].current_price;
 
-        // Also update in paginated watchlist if it exists
+
         const paginatedIndex = state.paginatedWatchlist.findIndex(token => token.id === tokenId);
         if (paginatedIndex !== -1) {
           state.paginatedWatchlist[paginatedIndex].holdings = holdings;
@@ -221,7 +221,7 @@ const portfolioSlice = createSlice({
     },
     setItemsPerPage: (state, action: PayloadAction<number>) => {
       state.itemsPerPage = action.payload;
-      state.currentPage = 1; // Reset to first page when changing items per page
+      state.currentPage = 1;
     },
     clearError: (state) => {
       state.error = null;

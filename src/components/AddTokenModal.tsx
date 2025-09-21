@@ -1,21 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import { addTokensToWatchlist } from '../store/slices/portfolioSlice';
-import { coinGeckoService } from '../services/coinGeckoService';
-import type { Token, TrendingToken } from '../types';
-import { formatCurrency, formatPercentage, getPercentageColor, debounce } from '../utils/helpers';
-import { X, TrendingUp, TrendingDown } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "../hooks/redux";
+import { addTokensToWatchlist } from "../store/slices/portfolioSlice";
+import { coinGeckoService } from "../services/coinGeckoService";
+import type { Token, TrendingToken } from "../types";
+import {
+  formatCurrency,
+  formatPercentage,
+  getPercentageColor,
+  debounce,
+} from "../utils/helpers";
+import { X, TrendingUp, TrendingDown } from "lucide-react";
 
 interface AddTokenModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose }) => {
+export const AddTokenModal: React.FC<AddTokenModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const dispatch = useAppDispatch();
   const { watchlist } = useAppSelector((state) => state.portfolio);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Token[]>([]);
   const [trendingTokens, setTrendingTokens] = useState<TrendingToken[]>([]);
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
@@ -23,9 +31,8 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const existingTokenIds = new Set(watchlist.map(token => token.id));
+  const existingTokenIds = new Set(watchlist.map((token) => token.id));
 
-  // Search function
   const performSearch = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -36,17 +43,23 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
     setError(null);
 
     try {
+      console.log("Performing search for:", query);
       const results = await coinGeckoService.searchTokens(query);
+      console.log("Search results:", results);
       setSearchResults(results);
+
+      if (results.length === 0) {
+        setError(`No tokens found for "${query}"`);
+      }
     } catch (err) {
-      setError('Failed to search tokens');
+      console.error("Search error:", err);
+      setError("Failed to search tokens. Please try again.");
       setSearchResults([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Debounced search function
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       performSearch(query);
@@ -54,7 +67,6 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
     []
   );
 
-  // Load trending tokens
   const loadTrendingTokens = async () => {
     setIsLoadingTrending(true);
     setError(null);
@@ -63,49 +75,49 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
       const trending = await coinGeckoService.getTrendingTokens();
       setTrendingTokens(trending);
     } catch (err) {
-      setError('Failed to load trending tokens');
+      setError("Failed to load trending tokens");
       setTrendingTokens([]);
     } finally {
       setIsLoadingTrending(false);
     }
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
     debouncedSearch(query);
   };
 
-  // Handle token selection
   const handleTokenSelect = (tokenId: string) => {
-    console.log('Selecting token:', tokenId);
-    setSelectedTokens(prev => {
+    console.log("Selecting token:", tokenId);
+    setSelectedTokens((prev) => {
       const newSelection = prev.includes(tokenId)
-        ? prev.filter(id => id !== tokenId)
+        ? prev.filter((id) => id !== tokenId)
         : [...prev, tokenId];
-      console.log('New selection:', newSelection);
+      console.log("New selection:", newSelection);
       return newSelection;
     });
   };
 
-  // Handle adding tokens to watchlist
   const handleAddToWatchlist = async () => {
     if (selectedTokens.length === 0) return;
 
     try {
-      // Get tokens from search results (which have current_price)
-      const searchTokensToAdd = searchResults.filter(token => selectedTokens.includes(token.id));
+      const searchTokensToAdd = searchResults.filter((token) =>
+        selectedTokens.includes(token.id)
+      );
 
-      // For trending tokens, we need to fetch their current prices
-      const trendingTokenIds = selectedTokens.filter(id =>
-        trendingTokens.some(token => token.id === id) &&
-        !searchResults.some(token => token.id === id)
+      const trendingTokenIds = selectedTokens.filter(
+        (id) =>
+          trendingTokens.some((token) => token.id === id) &&
+          !searchResults.some((token) => token.id === id)
       );
 
       let trendingTokensToAdd: Token[] = [];
       if (trendingTokenIds.length > 0) {
-        trendingTokensToAdd = await coinGeckoService.getTokenPrices(trendingTokenIds);
+        trendingTokensToAdd = await coinGeckoService.getTokenPrices(
+          trendingTokenIds
+        );
       }
 
       const allTokensToAdd = [...searchTokensToAdd, ...trendingTokensToAdd];
@@ -113,21 +125,19 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
       setSelectedTokens([]);
       onClose();
     } catch (err) {
-      setError('Failed to add tokens to watchlist');
+      setError("Failed to add tokens to watchlist");
     }
   };
 
-  // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setSearchQuery('');
+      setSearchQuery("");
       setSearchResults([]);
       setSelectedTokens([]);
       setError(null);
     }
   }, [isOpen]);
 
-  // Load trending tokens when modal opens
   useEffect(() => {
     if (isOpen && trendingTokens.length === 0) {
       loadTrendingTokens();
@@ -136,27 +146,33 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
 
   if (!isOpen) return null;
 
-  const renderTokenRow = (token: Token | TrendingToken, isTrending: boolean = false) => {
+  const renderTokenRow = (
+    token: Token | TrendingToken,
+    isTrending: boolean = false
+  ) => {
     const isSelected = selectedTokens.includes(token.id);
     const isExisting = existingTokenIds.has(token.id);
-    const priceChange = 'price_change_percentage_24h' in token ? token.price_change_percentage_24h : 0;
+    const priceChange =
+      "price_change_percentage_24h" in token
+        ? token.price_change_percentage_24h
+        : 0;
 
     return (
       <div
         key={token.id}
         className={`flex items-center justify-between p-3 sm:p-4 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors ${
-          isSelected ? 'bg-gray-700' : ''
-        } ${isExisting ? 'opacity-50' : ''}`}
+          isSelected ? "bg-gray-700" : ""
+        } ${isExisting ? "opacity-50" : ""}`}
         onClick={() => !isExisting && handleTokenSelect(token.id)}
       >
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <div className="relative">
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+          <div className="relative flex-shrink-0">
             <img
               src={token.image}
               alt={token.name}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/placeholder-token.png';
+                (e.target as HTMLImageElement).src = "/placeholder-token.png";
               }}
             />
             {isSelected && (
@@ -170,20 +186,27 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
               </div>
             )}
           </div>
-          <div>
-            <div className="font-medium text-white text-sm sm:text-base">{token.name}</div>
-            <div className="text-xs sm:text-sm text-gray-400 uppercase">{token.symbol}</div>
-            {!isTrending && 'current_price' in token && (
-              <div className="text-xs sm:text-sm text-gray-500">{formatCurrency(token.current_price)}</div>
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-white text-sm sm:text-base truncate">
+              {token.name}
+            </div>
+            <div className="text-xs sm:text-sm text-gray-400 uppercase">
+              {token.symbol}
+            </div>
+            {!isTrending && "current_price" in token && (
+              <div className="text-xs sm:text-sm text-gray-500">
+                {formatCurrency(token.current_price)}
+              </div>
             )}
           </div>
         </div>
-
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
           {priceChange !== 0 && (
-            <div className={`flex items-center space-x-1 ${
-              getPercentageColor(priceChange)
-            }`}>
+            <div
+              className={`flex items-center space-x-1 ${getPercentageColor(
+                priceChange
+              )}`}
+            >
               {priceChange >= 0 ? (
                 <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
               ) : (
@@ -214,17 +237,19 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
     );
   };
 
-        return (
-          <div
-            className="fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)'
-            }}
-          >
-      <div className="bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[98vh] sm:max-h-[90vh] overflow-hidden">
-        {/* Header */}
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-2 sm:p-4"
+      style={{
+        backgroundColor: "rgba(33, 33, 36, 0.8)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        className="rounded-2xl shadow-xl w-full max-w-2xl max-h-[98vh] sm:max-h-[90vh] overflow-hidden"
+        style={{ backgroundColor: "#27272A" }}
+      >
         <div className="flex items-center justify-end p-3 sm:p-4 lg:p-6">
           <button
             onClick={onClose}
@@ -233,13 +258,8 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
             <X className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
           </button>
         </div>
-
-
-        {/* Content */}
         <div className="overflow-y-auto max-h-72 sm:max-h-80 lg:max-h-96">
-          {/* Search Section */}
           <div className="mb-6 border-b border-gray-600">
-            {/* Search Input */}
             <div className="relative mb-4 px-3 sm:px-4 lg:px-6">
               <input
                 type="text"
@@ -249,15 +269,24 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
                 className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-400 focus:outline-none"
               />
             </div>
-
-            {/* Search Results */}
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                <span className="ml-2 text-gray-400 text-sm">Searching...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-4">
+                <div className="text-red-400 text-sm mb-2">{error}</div>
+                <button
+                  onClick={() => performSearch(searchQuery)}
+                  className="text-green-500 text-sm hover:text-green-400 underline"
+                >
+                  Try again
+                </button>
               </div>
             ) : searchResults.length > 0 ? (
               <div className="space-y-2 px-3 sm:px-4 lg:px-6">
-                {searchResults.map(token => renderTokenRow(token))}
+                {searchResults.map((token) => renderTokenRow(token))}
               </div>
             ) : searchQuery ? (
               <div className="text-center py-4 text-gray-400 text-sm">
@@ -265,19 +294,21 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
               </div>
             ) : null}
           </div>
-
-          {/* Trending Tokens Section */}
           <div>
-            <h3 className="text-sm font-medium text-gray-400 mb-3 px-3 sm:px-4 lg:px-6">Trending</h3>
+            <h3 className="text-sm font-medium text-gray-400 mb-3 px-3 sm:px-4 lg:px-6">
+              Trending
+            </h3>
             {isLoadingTrending ? (
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
               </div>
             ) : error ? (
-              <div className="text-center py-4 text-red-400 text-sm">{error}</div>
+              <div className="text-center py-4 text-red-400 text-sm">
+                {error}
+              </div>
             ) : trendingTokens.length > 0 ? (
               <div className="space-y-2 px-3 sm:px-4 lg:px-6">
-                {trendingTokens.map(token => renderTokenRow(token, true))}
+                {trendingTokens.map((token) => renderTokenRow(token, true))}
               </div>
             ) : (
               <div className="text-center py-4 text-gray-400 text-sm">
@@ -286,17 +317,34 @@ export const AddTokenModal: React.FC<AddTokenModalProps> = ({ isOpen, onClose })
             )}
           </div>
         </div>
-
-        {/* Footer */}
         <div className="flex items-center justify-end p-3 sm:p-4 lg:p-6">
           <button
             onClick={handleAddToWatchlist}
             disabled={selectedTokens.length === 0}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               selectedTokens.length === 0
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-green-500 text-black hover:bg-green-400'
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                : "text-black"
             }`}
+            style={
+              selectedTokens.length > 0
+                ? {
+                    backgroundColor: "#A9E851",
+                  }
+                : {}
+            }
+            onMouseEnter={(e) => {
+              if (selectedTokens.length > 0) {
+                (e.target as HTMLButtonElement).style.backgroundColor =
+                  "#9BD83F";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedTokens.length > 0) {
+                (e.target as HTMLButtonElement).style.backgroundColor =
+                  "#A9E851";
+              }
+            }}
           >
             Add to Watchlist
           </button>

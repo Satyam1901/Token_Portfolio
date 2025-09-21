@@ -10,7 +10,7 @@ interface PortfolioDonutChartProps {
 
 
 const renderCustomizedLabel = () => {
-  return null; 
+  return null;
 };
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -48,9 +48,8 @@ export const PortfolioDonutChart: React.FC<PortfolioDonutChartProps> = ({
   }
 
   return (
-    <div className="flex items-center space-x-6 lg:space-x-8">
-      {/* Chart */}
-      <div className="relative w-40 h-40 sm:w-48 sm:h-48">
+    <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-8">
+      <div className="relative w-48 h-48 sm:w-56 sm:h-56 mx-auto lg:mx-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -74,7 +73,6 @@ export const PortfolioDonutChart: React.FC<PortfolioDonutChartProps> = ({
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Center value display */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center">
             <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{formatCurrency(totalValue)}</p>
@@ -83,19 +81,18 @@ export const PortfolioDonutChart: React.FC<PortfolioDonutChartProps> = ({
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex-1">
-        <div className="space-y-2 sm:space-y-3">
+      <div className="w-full lg:flex-1 mt-6 lg:mt-0">
+        <div className="space-y-2 sm:space-y-3 w-full">
           {data.map((entry, index) => (
-            <div key={index} className="flex items-center justify-between">
+            <div key={index} className="flex items-center justify-between w-full">
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <div
                   className="w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="text-xs sm:text-sm text-white font-medium truncate">{entry.name} ({entry.symbol || entry.name.split(' ')[0].substring(0, 3).toUpperCase()})</span>
+                <span className="text-xs sm:text-sm text-white font-medium">{entry.name} ({entry.symbol || entry.name.split(' ')[0].substring(0, 3).toUpperCase()})</span>
               </div>
-              <span className="text-xs sm:text-sm text-gray-400 font-medium flex-shrink-0">{entry.percentage.toFixed(1)}%</span>
+              <span className="text-xs sm:text-sm text-gray-400 font-medium">{entry.percentage.toFixed(1)}%</span>
             </div>
           ))}
         </div>
