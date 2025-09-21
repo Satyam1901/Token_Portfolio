@@ -42,8 +42,8 @@
   },
   "overrides": {
     "use-sync-external-store": {
-      "react": "$react",
-      "react-dom": "$react-dom"
+      "react": "^19.1.1",
+      "react-dom": "^19.1.1"
     },
     "@paulmillr/qr": "npm:qr@^0.5.2"
   }

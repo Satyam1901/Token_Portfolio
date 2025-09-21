@@ -4,7 +4,6 @@ import {
   updateTokenHoldings,
   removeTokenFromWatchlist,
   setCurrentPage,
-  setItemsPerPage,
 } from "../store/slices/portfolioSlice";
 import {
   formatCurrency,
@@ -72,9 +71,6 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
     dispatch(setCurrentPage(newPage));
   };
 
-  const handleItemsPerPageChange = (newItemsPerPage: number) => {
-    dispatch(setItemsPerPage(newItemsPerPage));
-  };
 
   const getSparklineColor = (token: any) => {
     const prices = token.sparkline_in_7d?.price;
@@ -463,27 +459,7 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
                   {Math.min(currentPage * itemsPerPage, watchlist.length)} of{" "}
                   {watchlist.length} tokens
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm" style={{ color: "#92929A" }}>
-                    Show:
-                  </label>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) =>
-                      handleItemsPerPageChange(Number(e.target.value))
-                    }
-                    className="px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-1 focus:ring-gray-500"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={15}>15</option>
-                    <option value={20}>20</option>
-                    <option value={25}>25</option>
-                  </select>
-                  <span className="text-sm" style={{ color: "#92929A" }}>
-                    per page
-                  </span>
-                </div>
+
               </div>
 
               <div className="flex items-center space-x-1">
