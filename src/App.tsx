@@ -98,7 +98,6 @@ const AppContent: React.FC = () => {
           lastUpdated={lastUpdated}
         />
 
-        <div className="border-t border-gray-600 mb-6 sm:mb-8"></div>
 
         <WatchlistTable
           onRefresh={handleRefreshPrices}

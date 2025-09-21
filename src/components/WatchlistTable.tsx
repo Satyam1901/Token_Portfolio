@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import {
   updateTokenHoldings,
@@ -40,6 +40,24 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
   const [editingToken, setEditingToken] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>("");
   const [showMenu, setShowMenu] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(null);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
 
   const totalPages = Math.ceil(watchlist.length / itemsPerPage);
 
@@ -94,7 +112,6 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
   if (watchlist.length === 0 && !isLoading) {
     return (
       <div>
-        {/* Header Section - Outside the table */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
           <div className="flex items-center space-x-2">
             <Star
@@ -151,7 +168,7 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 border-0">
         <div className="flex items-center space-x-2">
           <Star
             className="w-4 h-4 sm:w-5 sm:h-5"
@@ -199,7 +216,6 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
           <table className="w-full min-w-[800px]">
             <thead>
               <tr
-                className="border-b border-gray-600"
                 style={{ backgroundColor: "#27272A" }}
               >
                 <th
@@ -373,7 +389,7 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
                     </div>
                   </td>
                   <td className="py-4 px-6 text-center">
-                    <div className="relative">
+                    <div className="relative" ref={showMenu === token.id ? menuRef : null}>
                       <button
                         onClick={() =>
                           setShowMenu(showMenu === token.id ? null : token.id)
@@ -383,16 +399,15 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                       {showMenu === token.id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-gray-800 rounded-md shadow-lg border border-gray-600 z-10">
+                        <div className="absolute right-0 mt-2 w-36 bg-gray-800 rounded-md shadow-lg border border-gray-600 z-10">
                           <button
                             onClick={() => {
                               handleEditHoldings(token.id, token.holdings);
                               setShowMenu(null);
                             }}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 whitespace-nowrap"
                           >
-                            <Edit2 className="inline-block w-4 h-4 mr-2" /> Edit
-                            Holdings
+                            <Edit2 className="inline-block w-4 h-4 mr-2" /> Edit Holdings
                           </button>
                           <button
                             onClick={() => handleRemoveToken(token.id)}
@@ -412,54 +427,12 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
         </div>
 
         {watchlist.length > 0 && (
-          <div
-            className="px-6 py-4 border-t border-gray-600"
-            style={{ backgroundColor: "#27272A" }}
-          >
-            <div className="flex sm:hidden items-center justify-between w-full">
+          <div className="px-6 py-4 border-t border-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
               <div className="text-sm" style={{ color: "#92929A" }}>
-                {currentPage} of {totalPages} pages
-              </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="text-sm px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: currentPage === 1 ? "#6B7280" : "#D1D5DB",
-                    backgroundColor:
-                      currentPage === 1 ? "transparent" : "transparent",
-                  }}
-                >
-                  Prev
-                </button>
-                <button
-                  onClick={() =>
-                    handlePageChange(Math.min(totalPages, currentPage + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="text-sm px-4 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: currentPage === totalPages ? "#6B7280" : "#D1D5DB",
-                    backgroundColor:
-                      currentPage === totalPages
-                        ? "transparent"
-                        : "transparent",
-                  }}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex flex-col lg:flex-row items-center justify-between">
-              <div className="flex flex-col lg:flex-row items-center space-y-2 lg:space-y-0 lg:space-x-4 mb-2 lg:mb-0">
-                <div className="text-sm" style={{ color: "#92929A" }}>
-                  Showing {(currentPage - 1) * itemsPerPage + 1} -{" "}
-                  {Math.min(currentPage * itemsPerPage, watchlist.length)} of{" "}
-                  {watchlist.length} tokens
-                </div>
-
+                Showing {(currentPage - 1) * itemsPerPage + 1} -{" "}
+                {Math.min(currentPage * itemsPerPage, watchlist.length)} of{" "}
+                {watchlist.length} tokens
               </div>
 
               <div className="flex items-center space-x-1">
